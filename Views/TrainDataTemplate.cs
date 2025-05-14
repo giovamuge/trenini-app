@@ -15,14 +15,17 @@ public class TrainDataTemplate : DataTemplate
         return new Grid
         {
             RowSpacing = 1,
+
             Padding = new Thickness(0, 10),
-            HorizontalOptions = LayoutOptions.Fill,
-            VerticalOptions = LayoutOptions.Fill,
-            RowDefinitions = Rows.Define((Row.Up, 1), (Row.Down, 1)),
+
+            // define rows with fixed height
+            RowDefinitions = Rows.Define((Row.Up, 40), (Row.Down, 40)),
+
+            // define columns
             ColumnDefinitions = Columns.Define(
-                (Col.Time, 1),
+                (Col.Time, 30),
                 (Col.Information, GridLength.Star),
-                (Col.Track, 1)
+                (Col.Track, 30)
             ),
 
             Children =

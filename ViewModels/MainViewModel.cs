@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.ObjectModel;
-using CommunityToolkit.Maui.Core.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using TreniniApp.Models;
@@ -27,15 +26,12 @@ public partial class MainViewModel : BaseViewModel
 
     public async Task LoadTrainDataAsync(int placeId)
     {
-        var trainRows = await _webScrapingService.GetTrainsAsync(placeId);
+        var trainRows = (await _webScrapingService.GetTrainsAsync(placeId)).OrderBy(static x =>
+            x.Time
+        );
 
         foreach (var trainRow in trainRows)
         {
-            // if (trainRow is not null && !TrainRows.Any(x => x.Train.Equals(trainRow.Train)))
-            // {
-            //     InsertIntoSortedCollection(TrainRows, (a, b) => b.Time.CompareTo(a.Time), trainRow);
-            // }
-            // InsertIntoSortedCollection(TrainRows, (x, y) => x.Time.CompareTo(y.Time), trainRow);
             TrainRows.Add(trainRow);
         }
     }

@@ -17,6 +17,8 @@ public partial class MainPage : BaseContentPage<MainViewModel>
         _dispatcher = dispatcher;
 
         BindingContext.PullToRefreshFailed += HandlePullToRefreshFailed;
+        BackgroundColor = Colors.WhiteSmoke;
+        Padding = new Thickness(0, 10);
 
         // Content =
         // new VerticalStackLayout
@@ -43,7 +45,6 @@ public partial class MainPage : BaseContentPage<MainViewModel>
                 StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(16) },
                 Background = Colors.White,
                 StrokeThickness = 0,
-                Padding = 0,
                 Margin = new Thickness(16, 0, 16, 0),
                 Content = new CollectionView
                 {
