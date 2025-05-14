@@ -9,6 +9,22 @@
 			"type": "maui",
 			"request": "launch",
 			"preLaunchTask": "maui: Build"
+		},
+		{
+			"name": "Launch iOS Simulator",
+			"type": "coreclr",
+			"request": "launch",
+			"program": "dotnet",
+			"args": [
+				"build",
+				"-t:Run",
+				"-f:net9.0-ios",
+				"/p:Platform=iPhoneSimulator",
+				"/p:DeviceName=iPhone Xs"
+			],
+			"cwd": "${workspaceFolder}",
+			"console": "internalConsole",
+			"stopAtEntry": false
 		}
 	]
 }
