@@ -7,5 +7,14 @@ public record TrainRow(
     string? Track,
     string? Delay,
     string? Category,
-    string? Vect
+    string? Vect,
+    int Index = 0,
+    Position Position = Position.Middle
 );
+
+public enum Position
+{
+    First,
+    Middle,
+    Last
+}

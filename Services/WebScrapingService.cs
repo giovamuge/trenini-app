@@ -24,6 +24,7 @@ public class WebScrapingService(HttpClient httpClient) : IWebScrapingService
             if (tableRows == null)
                 return rows;
 
+            var index = 0;
             var tableRowsWithoutHeader = tableRows.Skip(1);
             foreach (var row in tableRowsWithoutHeader) // skip header if needed
             {
@@ -49,7 +50,28 @@ public class WebScrapingService(HttpClient httpClient) : IWebScrapingService
                     ?.FirstOrDefault()
                     ?.GetAttributeValue("src", string.Empty);
 
-                rows.Add(new TrainRow(time, train, destination, track, delay, category, vect));
+                var position =
+                    index == 0
+                        ? Position.First
+                        : index == tableRowsWithoutHeader.Count() - 1
+                            ? Position.Last
+                            : Position.Middle;
+
+                rows.Add(
+                    new TrainRow(
+                        time,
+                        train,
+                        destination,
+                        track,
+                        delay,
+                        category,
+                        vect,
+                        index,
+                        position
+                    )
+                );
+
+                index++;
             }
 
             // Remove empty rows

@@ -18,7 +18,16 @@ public partial class MainPage : BaseContentPage<MainViewModel>
 
         BindingContext.PullToRefreshFailed += HandlePullToRefreshFailed;
         BackgroundColor = Colors.WhiteSmoke;
-        Padding = new Thickness(0, 10);
+        Padding = new Thickness(10, 0);
+
+        // ToolbarItems.Add(
+        //     new ToolbarItem()
+        //     {
+        //         Text = "Roma Termini",
+        //         Order = ToolbarItemOrder.Primary,
+        //         Priority = 0
+        //     }
+        // );
 
         // Content =
         // new VerticalStackLayout
@@ -40,20 +49,21 @@ public partial class MainPage : BaseContentPage<MainViewModel>
 
         Content = new RefreshView
         {
-            Content = new Border
+            Content = new CollectionView
             {
-                StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(16) },
-                Background = Colors.White,
-                StrokeThickness = 0,
-                Margin = new Thickness(16, 0, 16, 0),
-                Content = new CollectionView
+                Shadow = new Shadow
                 {
-                    // SeparatorColor = Color.FromArgb("#E5E5EA"),
-                    BackgroundColor = Colors.Transparent,
-                    // HasUnevenRows = true,
-                    ItemTemplate = new TrainDataTemplate()
-                }.Bind(CollectionView.ItemsSourceProperty, static (MainViewModel m) => m.TrainRows)
-            }
+                    Brush = Brush.Black,
+                    Opacity = 0.08f,
+                    Offset = new Point(0, 2),
+                    Radius = 8
+                },
+                BackgroundColor = Colors.Transparent,
+                Margin = new Thickness(0),
+                ItemTemplate = new TrainDataTemplate(),
+                // Apple style: no separators, no uneven rows, no background
+                SelectionMode = SelectionMode.None
+            }.Bind(CollectionView.ItemsSourceProperty, static (MainViewModel m) => m.TrainRows)
         }
             .Bind(
                 RefreshView.IsRefreshingProperty,
@@ -91,8 +101,8 @@ public partial class MainPage : BaseContentPage<MainViewModel>
 
             if (
                 content is RefreshView refresh
-                && refresh.Content is Border borderView
-                && borderView.Content is CollectionView view
+                // && refresh.Content is Border borderView
+                && refresh.Content is CollectionView view
             )
             {
                 refreshView = refresh;

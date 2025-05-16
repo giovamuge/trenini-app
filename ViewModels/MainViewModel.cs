@@ -10,6 +10,7 @@ namespace TreniniApp.ViewModels;
 public partial class MainViewModel : BaseViewModel
 {
     private readonly IWebScrapingService _webScrapingService;
+    private readonly IStationService _stationService;
     private readonly IDispatcher _dispatcher;
 
     public ObservableCollection<TrainRow> TrainRows { get; } = [];
@@ -17,10 +18,21 @@ public partial class MainViewModel : BaseViewModel
     [ObservableProperty]
     private string? _searchText;
 
-    public MainViewModel(IDispatcher dispatcher, IWebScrapingService webScrapingService)
+    [ObservableProperty]
+    private int? _selectedStation;
+
+    public MainViewModel(
+        IDispatcher dispatcher,
+        IWebScrapingService webScrapingService,
+        IStationService stationService
+    )
     {
         _webScrapingService = webScrapingService;
+        _stationService = stationService;
         _dispatcher = dispatcher;
+
+        SelectedStation = 2416;
+
         BindingBase.EnableCollectionSynchronization(TrainRows, null, ObservableCollectionCallback);
     }
 
@@ -55,7 +67,7 @@ public partial class MainViewModel : BaseViewModel
         try
         {
             IsListRefreshing = true;
-            await LoadTrainDataAsync(2416);
+            await LoadTrainDataAsync(SelectedStation ?? 2416);
         }
         catch (HttpRequestException e)
         {

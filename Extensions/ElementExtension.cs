@@ -23,4 +23,19 @@ public static class ElementExtensions
         paddingElement.SetValue(property, value);
         return paddingElement;
     }
+
+    /// <summary>
+    /// Sets the specified <paramref name="property"/> to the given <paramref name="binding"/> on the <typeparamref name="TLayout"/> element,
+    /// and returns the element for fluent chaining.
+    /// </summary>
+    public static TLayout SetBinding<TLayout>(
+        this TLayout paddingElement,
+        BindableProperty property,
+        object binding
+    )
+        where TLayout : View
+    {
+        paddingElement.SetValue(property, binding);
+        return paddingElement;
+    }
 }
