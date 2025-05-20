@@ -20,32 +20,14 @@ public partial class MainPage : BaseContentPage<MainViewModel>
         BackgroundColor = Colors.WhiteSmoke;
         Padding = new Thickness(10, 0);
 
-        // ToolbarItems.Add(
-        //     new ToolbarItem()
-        //     {
-        //         Text = "Roma Termini",
-        //         Order = ToolbarItemOrder.Primary,
-        //         Priority = 0
-        //     }
-        // );
-
-        // Content =
-        // new VerticalStackLayout
-        // {
-        //     Padding = 10,
-        //     Children =
-        // {
-        // new SearchBar { Placeholder = "Search trains..." }.Bind(
-        //     SearchBar.TextProperty,
-        //     static (MainViewModel m) => m.SearchText,
-        //     mode: BindingMode.TwoWay
-        // ),
-        // .Invoke(searchBar =>
-        //     searchBar.TextChanged += (s, e) =>
-        //     {
-        //         ((MainViewModel)BindingContext).FilterTrains();
-        //     }
-        // ),
+        ToolbarItems.Add(
+            new ToolbarItem { Order = ToolbarItemOrder.Primary, Priority = 0 }
+                .Bind(
+                    ToolbarItem.CommandProperty,
+                    static (MainViewModel vm) => vm.SelectStationCommand
+                )
+                .Bind(ToolbarItem.TextProperty, static (MainViewModel vm) => vm.StationName)
+        );
 
         Content = new RefreshView
         {

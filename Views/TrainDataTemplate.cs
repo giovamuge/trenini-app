@@ -15,6 +15,7 @@ public class TrainDataTemplate : DataTemplate
         new Border
         {
             BackgroundColor = Colors.White,
+            StrokeThickness = 0,
             Content = new Grid
             {
                 RowSpacing = 0,
@@ -23,7 +24,8 @@ public class TrainDataTemplate : DataTemplate
 
                 RowDefinitions = Rows.Define(
                     (Row.Up, GridLength.Auto),
-                    (Row.Down, GridLength.Auto)
+                    (Row.Down, GridLength.Auto),
+                    (Row.Border, GridLength.Auto)
                 ),
                 ColumnDefinitions = Columns.Define(
                     (Col.Time, GridLength.Auto),
@@ -95,23 +97,23 @@ public class TrainDataTemplate : DataTemplate
                             mode: BindingMode.OneTime
                         ),
                     // Apple style: subtle separator at the bottom, solo se non è l'ultimo elemento
-                    // new BoxView
-                    // {
-                    //     HeightRequest = 1,
-                    //     BackgroundColor = Color.FromArgb("#E5E5EA"),
-                    //     HorizontalOptions = LayoutOptions.Fill,
-                    //     VerticalOptions = LayoutOptions.End,
-                    //     Margin = new Thickness(0, 8, 0, 0)
-                    // }
-                    //     .RowSpan(2)
-                    //     .ColumnSpan(3)
-                    //     .Margins(0, 10, 0,0)
-                    //     .Bind(
-                    //         BoxView.IsVisibleProperty,
-                    //         static (TrainRow m) => m.Position,
-                    //         mode: BindingMode.OneTime,
-                    //         convert: static (object? pos) => pos is Position p && p != Position.Last
-                    //     )
+                    new BoxView
+                    {
+                        HeightRequest = 1,
+                        BackgroundColor = Color.FromArgb("#E5E5EA"),
+                        HorizontalOptions = LayoutOptions.Fill,
+                        VerticalOptions = LayoutOptions.End,
+                        Margin = new Thickness(0, 8, 0, 0)
+                    }
+                        .Row(Row.Border)
+                        .ColumnSpan(3)
+                        .Margins(0, 10, 0, 0)
+                        .Bind(
+                            BoxView.IsVisibleProperty,
+                            static (TrainRow m) => m.Position,
+                            mode: BindingMode.OneTime,
+                            convert: static (object? pos) => pos is Position p && p != Position.Last
+                        )
                 }
             }
         }.Bind(
@@ -135,7 +137,8 @@ public class TrainDataTemplate : DataTemplate
     enum Row
     {
         Up,
-        Down
+        Down,
+        Border
     }
 
     enum Col

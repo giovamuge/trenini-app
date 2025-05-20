@@ -30,6 +30,10 @@ public static class MauiProgram
         // App
         builder.Services.AddSingleton<App>();
 
+        // Navigation
+        builder.Services.AddSingleton<NavigationPage>();
+        builder.Services.AddSingleton<INavigationService, NavigationService>();
+
         // Services
         builder.Services.AddHttpClient();
         builder.Services.AddSingleton(Browser.Default);
@@ -38,6 +42,7 @@ public static class MauiProgram
 
         // Pages + View Models
         builder.Services.AddTransient<MainPage, MainViewModel>();
+        builder.Services.AddTransient<SelectStationPage, SelectStationViewModel>();
 
 #if DEBUG
         builder.Logging.AddDebug();

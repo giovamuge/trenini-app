@@ -1,9 +1,12 @@
 using System.Collections;
 using System.Collections.ObjectModel;
+using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using TreniniApp.Models;
+using TreniniApp.Pages;
 using TreniniApp.Services;
+using TreniniApp.Utils;
 
 namespace TreniniApp.ViewModels;
 
@@ -12,26 +15,32 @@ public partial class MainViewModel : BaseViewModel
     private readonly IWebScrapingService _webScrapingService;
     private readonly IStationService _stationService;
     private readonly IDispatcher _dispatcher;
+    private readonly INavigationService _navigationService;
 
     public ObservableCollection<TrainRow> TrainRows { get; } = [];
 
     [ObservableProperty]
     private string? _searchText;
 
+    private readonly int _selectedStation = Preferences.Get(
+        StationConstant.SelectedStationKey,
+        StationConstant.DefaultStationId
+    );
+
     [ObservableProperty]
-    private int? _selectedStation;
+    private string? _stationName;
 
     public MainViewModel(
         IDispatcher dispatcher,
         IWebScrapingService webScrapingService,
-        IStationService stationService
+        IStationService stationService,
+        INavigationService navigationService
     )
     {
         _webScrapingService = webScrapingService;
         _stationService = stationService;
         _dispatcher = dispatcher;
-
-        SelectedStation = 2416;
+        _navigationService = navigationService;
 
         BindingBase.EnableCollectionSynchronization(TrainRows, null, ObservableCollectionCallback);
     }
@@ -60,6 +69,28 @@ public partial class MainViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    async Task SelectStation()
+    {
+        // var selectStationPage = Application
+        //     .Current?.Windows[0]?
+        //     .Page?.Handler?.MauiContext?.Services.GetService<SelectStationPage>();
+
+        // if (selectStationPage is null)
+        //     return;
+
+        // var station = await .Current(selectStationPage);
+
+        // if (station is null)
+        //     return;
+
+        // Preferences.Set(SelectedStationKey, station.Code);
+        // _selectedStation = station.Code;
+
+        var selectStationPage = await DipendencyInjectionUtil.ResolveAsync<SelectStationPage>();
+        await _navigationService.PushModalAsync(selectStationPage);
+    }
+
+    [RelayCommand]
     async Task Refresh()
     {
         TrainRows.Clear();
@@ -67,7 +98,7 @@ public partial class MainViewModel : BaseViewModel
         try
         {
             IsListRefreshing = true;
-            await LoadTrainDataAsync(SelectedStation ?? 2416);
+            await LoadTrainDataAsync(_selectedStation);
         }
         catch (HttpRequestException e)
         {
@@ -123,5 +154,15 @@ public partial class MainViewModel : BaseViewModel
 
             collection.Insert(index, modelToInsert);
         }
+    }
+
+    public override async Task OnAppearingAsync()
+    {
+        var stationName =
+            await _stationService.GetStationNameByIdAsync($"{_selectedStation}") ?? "Uknown";
+
+        StationName = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(
+            stationName.ToLower()
+        );
     }
 }

@@ -1,3 +1,3 @@
 namespace TreniniApp.Models;
 
-public record Station(string Code, string Name);
+public record Station(string Value, string Name);

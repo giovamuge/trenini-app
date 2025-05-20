@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using TreniniApp.ViewModels;
 
 namespace TreniniApp.Pages;
@@ -12,4 +13,24 @@ public abstract class BaseContentPage<TViewModel> : ContentPage
     }
 
     protected new TViewModel BindingContext => (TViewModel)base.BindingContext;
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        if (BindingContext is BaseViewModel vm)
+        {
+            await vm.OnAppearingAsync();
+        }
+    }
+
+    protected override async void OnDisappearing()
+    {
+        base.OnDisappearing();
+
+        if (BindingContext is BaseViewModel vm)
+        {
+            await vm.OnDisappearingAsync();
+        }
+    }
 }

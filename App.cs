@@ -3,16 +3,25 @@ using CommunityToolkit.Maui.Markup;
 using Microsoft.Maui.Controls.PlatformConfiguration;
 using Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;
 using TreniniApp.Pages;
+using TreniniApp.Services;
 
 namespace TreniniApp;
 
 public class App : Microsoft.Maui.Controls.Application
 {
     readonly MainPage _mainPage;
+    readonly INavigationService _navigationService;
+    readonly Microsoft.Maui.Controls.NavigationPage _navigationPage;
 
-    public App(MainPage mainPage)
+    public App(
+        MainPage mainPage,
+        INavigationService navigationService,
+        Microsoft.Maui.Controls.NavigationPage navigationPage
+    )
     {
         _mainPage = mainPage;
+        _navigationService = navigationService;
+        _navigationPage = navigationPage;
         // Resources = new ResourceDictionary()
         // {
         // 	new Style<Shell>(
@@ -41,8 +50,20 @@ public class App : Microsoft.Maui.Controls.Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        var navigationPage = new Microsoft.Maui.Controls.NavigationPage(_mainPage);
-        navigationPage.On<iOS>().SetPrefersLargeTitles(true);
-        return new Window(navigationPage);
+        // Ensure that MainPage is set as the root of the NavigationPage
+        _navigationPage.On<iOS>().SetPrefersLargeTitles(true);
+
+        if (_navigationPage.CurrentPage == null)
+        {
+            _navigationPage.PushAsync(_mainPage); // fallback, but it's better to use the constructor
+        }
+
+        // Update the NavigationPage in the service if necessary
+        if (_navigationService is NavigationService navService)
+        {
+            navService.SetNavigationPage(_navigationPage);
+        }
+
+        return new Window(_navigationPage);
     }
 }

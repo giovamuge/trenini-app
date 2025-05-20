@@ -15,7 +15,7 @@ public class StationService() : IStationService
     public async Task<string?> GetStationNameByIdAsync(string code)
     {
         var stations = await ReadStationsFromFileAsync();
-        var station = stations.FirstOrDefault(s => s.Code == code);
+        var station = stations.FirstOrDefault(s => s.Value == code);
         return station?.Name;
     }
 
@@ -40,8 +40,8 @@ public class StationService() : IStationService
                     && s.Name.Contains(query, StringComparison.InvariantCultureIgnoreCase)
                 )
                 || (
-                    !string.IsNullOrEmpty(s.Code)
-                    && s.Code.Contains(query, StringComparison.InvariantCultureIgnoreCase)
+                    !string.IsNullOrEmpty(s.Value)
+                    && s.Value.Contains(query, StringComparison.InvariantCultureIgnoreCase)
                 )
             )
         ];
