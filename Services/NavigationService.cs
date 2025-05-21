@@ -1,34 +1,30 @@
+using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.PlatformConfiguration;
-using Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;
-using MauiControls = Microsoft.Maui.Controls;
 
 namespace TreniniApp.Services;
 
-public class NavigationService(MauiControls.NavigationPage navigationPage) : INavigationService
+public class NavigationService(NavigationPage navigationPage) : INavigationService
 {
-    private MauiControls.NavigationPage _navigationPage = navigationPage;
+    private NavigationPage _navigationPage = navigationPage;
 
-    public void SetNavigationPage(MauiControls.NavigationPage navigationPage)
+    public void SetNavigationPage(NavigationPage navigationPage)
     {
         _navigationPage = navigationPage;
     }
 
-    public Task PushAsync(MauiControls.Page page) =>
+    public Task PushAsync(Page page) =>
         EnsureModalPageIsNotInStack(page, _navigationPage.PushAsync(page));
 
     public Task PopAsync() => _navigationPage.PopAsync();
 
     public Task PopToRootAsync() => _navigationPage.PopToRootAsync();
 
-    public Task PushModalAsync(MauiControls.Page page)
-    {
-        _navigationPage.On<iOS>().SetModalPresentationStyle(UIModalPresentationStyle.FormSheet);
-        return EnsureModalPageIsNotInStack(page, _navigationPage.Navigation.PushModalAsync(page));
-    }
+    public Task PushModalAsync(Page page) =>
+        EnsureModalPageIsNotInStack(page, _navigationPage.Navigation.PushModalAsync(page));
 
     public Task PopModalAsync() => _navigationPage.Navigation.PopModalAsync();
 
-    private Task EnsureModalPageIsNotInStack(MauiControls.Page page, Task task)
+    private Task EnsureModalPageIsNotInStack(Page page, Task task)
     {
         // Check if the page is already in the modal stack
         if (_navigationPage.Navigation.ModalStack.Contains(page))

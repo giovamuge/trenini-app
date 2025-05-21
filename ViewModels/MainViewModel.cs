@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using TreniniApp.Constants;
 using TreniniApp.Models;
 using TreniniApp.Pages;
 using TreniniApp.Services;
@@ -22,7 +23,7 @@ public partial class MainViewModel : BaseViewModel
     [ObservableProperty]
     private string? _searchText;
 
-    private readonly int _selectedStation = Preferences.Get(
+    private readonly string _selectedStation = Preferences.Get(
         StationConstant.SelectedStationKey,
         StationConstant.DefaultStationId
     );
@@ -45,7 +46,7 @@ public partial class MainViewModel : BaseViewModel
         BindingBase.EnableCollectionSynchronization(TrainRows, null, ObservableCollectionCallback);
     }
 
-    public async Task LoadTrainDataAsync(int placeId)
+    public async Task LoadTrainDataAsync(string placeId)
     {
         var trainRows = (await _webScrapingService.GetTrainsAsync(placeId)).OrderBy(static x =>
             x.Time

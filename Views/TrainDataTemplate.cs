@@ -1,5 +1,6 @@
 using CommunityToolkit.Maui.Markup;
 using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Layouts;
 using TreniniApp.Extensions;
 using TreniniApp.Models;
 using static CommunityToolkit.Maui.Markup.GridRowsColumns;
@@ -18,7 +19,7 @@ public class TrainDataTemplate : DataTemplate
             StrokeThickness = 0,
             Content = new Grid
             {
-                RowSpacing = 0,
+                RowSpacing = 3,
                 ColumnSpacing = 5,
                 Padding = new Thickness(16, 12), // margine superiore aumentato
 
@@ -51,6 +52,7 @@ public class TrainDataTemplate : DataTemplate
                         .Row(Row.Down)
                         .Column(Col.Time)
                         .TextColor(Color.FromArgb("#FF6B6B")) // rosso leggero
+                        .Set(Label.HorizontalTextAlignmentProperty, TextAlignment.End)
                         .Font(size: 13)
                         .Bind(
                             Label.TextProperty,
@@ -103,11 +105,9 @@ public class TrainDataTemplate : DataTemplate
                         BackgroundColor = Color.FromArgb("#E5E5EA"),
                         HorizontalOptions = LayoutOptions.Fill,
                         VerticalOptions = LayoutOptions.End,
-                        Margin = new Thickness(0, 8, 0, 0)
                     }
                         .Row(Row.Border)
                         .ColumnSpan(3)
-                        .Margins(0, 10, 0, 0)
                         .Bind(
                             BoxView.IsVisibleProperty,
                             static (TrainRow m) => m.Position,

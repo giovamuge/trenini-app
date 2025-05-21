@@ -1,4 +1,6 @@
 using CommunityToolkit.Maui.Markup;
+using Microsoft.Maui.Controls.PlatformConfiguration;
+using Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;
 using TreniniApp.Models;
 using TreniniApp.ViewModels;
 
@@ -9,6 +11,15 @@ public partial class SelectStationPage : BaseContentPage<SelectStationViewModel>
     public SelectStationPage(SelectStationViewModel viewModel)
         : base(viewModel, "Stations")
     {
+        On<iOS>().SetModalPresentationStyle(UIModalPresentationStyle.PageSheet);
+
+        ToolbarItems.Add(
+            new ToolbarItem { Text = "Cancel" }.Bind(
+                ToolbarItem.CommandProperty,
+                static (SelectStationViewModel vm) => vm.CancelCommand
+            )
+        );
+
         Content = new VerticalStackLayout
         {
             Children =

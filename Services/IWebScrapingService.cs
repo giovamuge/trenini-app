@@ -4,5 +4,5 @@ namespace TreniniApp.Services;
 
 public interface IWebScrapingService
 {
-    Task<List<TrainRow>> GetTrainsAsync(int placeId);
+    Task<List<TrainRow>> GetTrainsAsync(string placeId);
 }

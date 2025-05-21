@@ -7,7 +7,7 @@ public class WebScrapingService(HttpClient httpClient) : IWebScrapingService
 {
     private readonly HttpClient _httpClient = httpClient;
 
-    public async Task<List<TrainRow>> GetTrainsAsync(int placeId)
+    public async Task<List<TrainRow>> GetTrainsAsync(string placeId)
     {
         try
         {
