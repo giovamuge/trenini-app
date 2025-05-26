@@ -20,7 +20,7 @@ public partial class SelectStationPage : BaseContentPage<SelectStationViewModel>
             )
         );
 
-        Content = new VerticalStackLayout
+        Content = new Grid
         {
             Children =
             {

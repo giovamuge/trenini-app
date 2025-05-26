@@ -1,33 +1,51 @@
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.PlatformConfiguration;
+using TreniniApp.Extensions;
 
 namespace TreniniApp.Services;
 
-public class NavigationService(NavigationPage navigationPage) : INavigationService
+public class NavigationService(IServiceProvider serviceProvider) : INavigationService
 {
-    private NavigationPage _navigationPage = navigationPage;
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
-    public void SetNavigationPage(NavigationPage navigationPage)
+    private static INavigation Navigation
     {
-        _navigationPage = navigationPage;
+        get
+        {
+            // Assumes MainPage is a NavigationPage
+            if (Application.Current?.Windows[0]?.Page is not NavigationPage navigationPage)
+            {
+                throw new InvalidOperationException("MainPage is not a NavigationPage");
+            }
+
+            return navigationPage.Navigation;
+        }
     }
 
-    public Task PushAsync(Page page) =>
-        EnsureModalPageIsNotInStack(page, _navigationPage.PushAsync(page));
+    public Task PushAsync<TPage>()
+        where TPage : Page
+    {
+        var page = _serviceProvider.GetService<TPage>();
+        return Navigation.PushAsync(page);
+    }
 
-    public Task PopAsync() => _navigationPage.PopAsync();
+    public Task PopAsync() => Navigation.PopAsync();
 
-    public Task PopToRootAsync() => _navigationPage.PopToRootAsync();
+    public Task PopToRootAsync() => Navigation.PopToRootAsync();
 
-    public Task PushModalAsync(Page page) =>
-        EnsureModalPageIsNotInStack(page, _navigationPage.Navigation.PushModalAsync(page));
+    public Task PushModalAsync<TPage>()
+        where TPage : Page
+    {
+        var page = _serviceProvider.GetService<TPage>();
+        return Navigation.PushModalAsync(page);
+    }
 
-    public Task PopModalAsync() => _navigationPage.Navigation.PopModalAsync();
+    public Task PopModalAsync() => Navigation.PopModalAsync();
 
     private Task EnsureModalPageIsNotInStack(Page page, Task task)
     {
         // Check if the page is already in the modal stack
-        if (_navigationPage.Navigation.ModalStack.Contains(page))
+        if (Navigation.ModalStack.Contains(page))
         {
             return Task.CompletedTask; // or throw an exception if you prefer
         }

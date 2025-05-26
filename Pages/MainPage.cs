@@ -18,7 +18,7 @@ public partial class MainPage : BaseContentPage<MainViewModel>
 
         BindingContext.PullToRefreshFailed += HandlePullToRefreshFailed;
         BackgroundColor = Colors.WhiteSmoke;
-        Padding = new Thickness(10, 0);
+        Padding = new Thickness(10, 5);
 
         ToolbarItems.Add(
             new ToolbarItem { Order = ToolbarItemOrder.Primary, Priority = 0 }

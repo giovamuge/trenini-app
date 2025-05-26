@@ -87,8 +87,8 @@ public partial class MainViewModel : BaseViewModel
         // Preferences.Set(SelectedStationKey, station.Code);
         // _selectedStation = station.Code;
 
-        var selectStationPage = await DipendencyInjectionUtil.ResolveAsync<SelectStationPage>();
-        await _navigationService.PushModalAsync(selectStationPage);
+        // var selectStationPage = await DipendencyInjectionUtil.ResolveAsync<SelectStationPage>();
+        await _navigationService.PushModalAsync<SelectStationPage>();
     }
 
     [RelayCommand]

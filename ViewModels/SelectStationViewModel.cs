@@ -36,20 +36,38 @@ namespace TreniniApp.ViewModels
         [RelayCommand]
         public async Task LoadStationsAsync()
         {
-            Stations.Clear();
-            var stations = await _stationService.GetAllStationsAsync();
-            foreach (var station in stations)
+            try
             {
-                Stations.Add(station);
-            }
+                Stations.Clear();
+                var stations = await _stationService.GetAllStationsAsync();
+                foreach (var station in stations.Take(100)) // Limit to 100 stations for performance
+                {
+                    Stations.Add(station);
+                }
 
-            SelectedStation = Stations.FirstOrDefault(static x =>
-                x.Value
-                == Preferences.Get(
-                    StationConstant.SelectedStationKey,
-                    StationConstant.DefaultStationId
-                )
-            );
+                SelectedStation = Stations.FirstOrDefault(static x =>
+                    x.Value
+                    == Preferences.Get(
+                        StationConstant.SelectedStationKey,
+                        StationConstant.DefaultStationId
+                    )
+                );
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions, e.g., show an error message
+                await _dispatcher.DispatchAsync(() =>
+                {
+                    // Show error message to the user
+                    // This could be a dialog, toast, or any other UI element
+                    // For example:
+                    App.Current?.Windows?[0]?.Page?.DisplayAlert(
+                        "Error",
+                        $"Failed to load stations: {ex.Message}",
+                        "OK"
+                    );
+                });
+            }
         }
 
         private bool CanSelectStation() => SelectedStation != null;
