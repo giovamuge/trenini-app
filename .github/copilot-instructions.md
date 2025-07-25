@@ -1,0 +1,227 @@
+# TreniniApp Development Guidelines for GitHub Copilot
+
+## Project Overview
+TreniniApp is a .NET MAUI cross-platform mobile application for train schedule management, built following Clean Architecture principles, SOLID design patterns, and modern C# best practices.
+
+## Architecture & Design Patterns
+
+### Clean Architecture Layers
+```
+├── Pages/           # Presentation Layer - UI Components
+├── ViewModels/      # Presentation Layer - Business Logic
+├── Views/           # Presentation Layer - Reusable UI Elements  
+├── Services/        # Application Layer - Business Services
+├── Models/          # Domain Layer - Core Entities
+├── Constants/       # Domain Layer - Application Constants
+├── Utils/           # Infrastructure Layer - Helper Utilities
+└── Platforms/       # Infrastructure Layer - Platform-specific code
+```
+
+### MVVM Pattern Implementation
+- **Pages**: Always inherit from `BaseContentPage<TViewModel>`
+- **ViewModels**: Always inherit from `BaseViewModel` with lifecycle methods
+- **Binding**: Use `CommunityToolkit.Maui.Markup` for fluent UI declarations
+- **Commands**: Use `[RelayCommand]` for UI actions with optional `CanExecute`
+
+### Dependency Injection
+- Register all services in `MauiProgram.cs`
+- Use interfaces for all services (`INavigationService`, `IStationService`, `IWebScrapingService`)
+- Constructor injection only - avoid service locator pattern
+- Resolve dependencies via `DipendencyInjectionUtil.GetService<T>()`
+
+## Code Standards & Best Practices
+
+### Naming Conventions
+```csharp
+// ✅ PascalCase for public members
+public ObservableCollection<Station> FilteredStations { get; } = [];
+public async Task LoadStationsAsync()
+
+// ✅ camelCase with underscore for private fields
+private readonly IStationService _stationService;
+private bool _isLoading = false;
+
+// ✅ Descriptive method names
+LoadMoreStationsAsync() // not LoadData()
+OnSearchTextChanged()   // not OnTextChanged()
+```
+
+### Async Programming Patterns
+```csharp
+// ✅ Always use async/await for I/O operations
+var stations = await _stationService.GetAllStationsAsync();
+
+// ✅ Proper exception handling with try-catch-finally
+try 
+{
+    _isLoading = true;
+    // async operation
+}
+catch (Exception ex)
+{
+    // user-friendly error handling
+    await _dispatcher.DispatchAsync(() => DisplayAlert(...));
+}
+finally 
+{
+    _isLoading = false;
+}
+
+// ✅ Use Task not async void (except event handlers)
+public async Task LoadStationsAsync() // ✅
+public async void OnButtonClicked()   // ✅ (event handler only)
+```
+
+### Performance Optimization
+```csharp
+// ✅ Static binding expressions for performance
+.Bind(Label.TextProperty, static (Station s) => s.Name)
+
+// ✅ Collection expressions for modern C#
+_allStations = [.. stations];
+
+// ✅ Infinite scrolling for large datasets
+private int _pageSize = 50;
+private int _currentPage = 0;
+private bool _allLoaded = false;
+
+// ✅ Prevent concurrent operations
+if (_isLoading || _allLoaded) return;
+_isLoading = true;
+```
+
+### UI Development with Markup
+```csharp
+// ✅ Fluent UI declarations
+new SearchBar { Placeholder = "Search station..." }
+    .Bind(SearchBar.TextProperty, 
+          static (SelectStationViewModel vm) => vm.SearchText,
+          mode: BindingMode.TwoWay)
+    .Row(0)
+
+// ✅ Grid layout with typed definitions
+new Grid
+{
+    RowDefinitions = Rows.Define((0, GridLength.Auto), (1, GridLength.Star)),
+    Children = { /* content */ }
+}
+
+// ✅ Platform-specific configurations
+page.On<iOS>().SetModalPresentationStyle(UIModalPresentationStyle.PageSheet);
+```
+
+### Navigation Pattern
+```csharp
+// ✅ Always use INavigationService for navigation
+await _navigationService.PushAsync<SelectStationPage>();
+await _navigationService.PopAsync();
+
+// ✅ Modal presentation with proper styling
+await _navigationService.PushModalAsync(page);
+```
+
+### State Management
+```csharp
+// ✅ ObservableProperty for reactive UI
+[ObservableProperty]
+private string? searchText;
+
+[ObservableProperty]
+private Station? selectedStation;
+
+// ✅ ObservableCollection for dynamic lists
+public ObservableCollection<Station> FilteredStations { get; } = [];
+
+// ✅ Preferences for data persistence
+Preferences.Set(StationConstant.SelectedStationKey, selectedValue);
+var savedValue = Preferences.Get(StationConstant.SelectedStationKey, defaultValue);
+```
+
+### Error Handling Standards
+```csharp
+// ✅ User-friendly error messages
+await _dispatcher.DispatchAsync(() =>
+{
+    App.Current?.Windows?[0]?.Page?.DisplayAlert(
+        "Error", 
+        $"Failed to load stations: {ex.Message}", 
+        "OK"
+    );
+});
+
+// ✅ Defensive programming with null checks
+if (station == null) return;
+private bool CanSelectStation() => SelectedStation != null;
+
+// ✅ Early returns to reduce nesting
+if (_isLoading) return;
+if (string.IsNullOrWhiteSpace(value)) return;
+```
+
+## Anti-Patterns to Avoid
+
+❌ **Don't use `Application.Current` for service resolution**
+❌ **Don't create service instances manually**  
+❌ **Don't bind directly to async Task methods**
+❌ **Don't block UI thread with `.Result` or `.Wait()`**
+❌ **Don't duplicate business logic between ViewModels**
+❌ **Don't use magic strings - always use Constants**
+❌ **Don't break MVVM by putting business logic in code-behind**
+
+## SOLID Principles in Practice
+
+### Single Responsibility Principle (SRP)
+- Each ViewModel handles one specific feature (e.g., `SelectStationViewModel` only for station selection)
+- Services have focused responsibilities (`IStationService` only for station data)
+
+### Open/Closed Principle (OCP)
+- Extend functionality through interfaces and inheritance
+- Use `BaseViewModel` and `BaseContentPage<T>` for common behavior
+
+### Liskov Substitution Principle (LSP)
+- All service implementations must be substitutable with their interfaces
+- ViewModels can be used polymorphically through `BaseViewModel`
+
+### Interface Segregation Principle (ISP)
+- Create specific, focused interfaces (`INavigationService`, `IStationService`)
+- Don't force classes to depend on methods they don't use
+
+### Dependency Inversion Principle (DIP)
+- Depend on abstractions (interfaces) not concrete implementations
+- Use constructor injection for all dependencies
+
+## Template for New Features
+
+When implementing new features, follow this structure:
+
+1. **Domain Model** (`Models/NewEntity.cs`)
+2. **Service Interface** (`Services/INewService.cs`)
+3. **Service Implementation** (`Services/NewService.cs`)
+4. **Register in DI** (`MauiProgram.cs`)
+5. **ViewModel** (`ViewModels/NewViewModel.cs` inheriting `BaseViewModel`)
+6. **Page** (`Pages/NewPage.cs` inheriting `BaseContentPage<NewViewModel>`)
+7. **Navigation** (integrate with `INavigationService`)
+
+## Code Quality Checklist
+
+Before submitting code, ensure:
+- [ ] All async methods end with `Async` suffix
+- [ ] Proper exception handling with user-friendly messages
+- [ ] No magic strings - use Constants
+- [ ] Static binding expressions where possible
+- [ ] Proper disposal of resources
+- [ ] Constructor injection for all dependencies
+- [ ] ObservableProperty for reactive properties
+- [ ] RelayCommand for UI actions
+- [ ] Platform-specific configurations using `.On<Platform>()`
+
+## Performance Guidelines
+
+- Use infinite scrolling for lists > 100 items
+- Implement debouncing for search functionality
+- Use `ConfigureAwait(false)` in service layer methods
+- Avoid complex calculations in binding expressions
+- Use static binding for better performance
+- Enable collection synchronization for thread-safe ObservableCollections
+
+Remember: Clean, maintainable, and testable code is always preferred over clever or complex solutions.
