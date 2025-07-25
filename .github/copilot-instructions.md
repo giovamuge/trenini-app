@@ -1,7 +1,7 @@
 # TreniniApp Development Guidelines for GitHub Copilot
 
 ## Project Overview
-TreniniApp is a .NET MAUI cross-platform mobile application for train schedule management, built following Clean Architecture principles, SOLID design patterns, and modern C# best practices.
+TreniniApp is a .NET MAUI cross-platform mobile application for train schedule management, built following Clean Architecture principles, SOLID design patterns, modern C# best practices, and .NET MAUI AOT (Ahead-of-Time) compilation guidelines for optimal performance and reduced startup times.
 
 ## Architecture & Design Patterns
 
@@ -88,6 +88,13 @@ private bool _allLoaded = false;
 // ✅ Prevent concurrent operations
 if (_isLoading || _allLoaded) return;
 _isLoading = true;
+
+// ✅ AOT-compatible static delegates (avoid runtime code generation)
+.Where(static s => s.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+
+// ✅ Avoid reflection in AOT builds
+// Use explicit type conversions instead of dynamic/reflection
+var station = (Station)item; // instead of dynamic casting
 ```
 
 ### UI Development with Markup
@@ -167,6 +174,8 @@ if (string.IsNullOrWhiteSpace(value)) return;
 ❌ **Don't duplicate business logic between ViewModels**
 ❌ **Don't use magic strings - always use Constants**
 ❌ **Don't break MVVM by putting business logic in code-behind**
+❌ **Don't use reflection or dynamic code generation (AOT incompatible)**
+❌ **Don't use Activator.CreateInstance() or Assembly.GetTypes()**
 
 ## SOLID Principles in Practice
 
@@ -214,6 +223,8 @@ Before submitting code, ensure:
 - [ ] ObservableProperty for reactive properties
 - [ ] RelayCommand for UI actions
 - [ ] Platform-specific configurations using `.On<Platform>()`
+- [ ] AOT-compatible code (avoid reflection, use static delegates)
+- [ ] Explicit type conversions instead of dynamic casting
 
 ## Performance Guidelines
 
@@ -223,5 +234,40 @@ Before submitting code, ensure:
 - Avoid complex calculations in binding expressions
 - Use static binding for better performance
 - Enable collection synchronization for thread-safe ObservableCollections
+
+## .NET MAUI AOT Compliance Guidelines
+
+### AOT-Safe Patterns
+```csharp
+// ✅ Use static delegates instead of lambda expressions where possible
+.Where(static item => item.IsActive)
+
+// ✅ Avoid reflection - use explicit type conversions
+var station = (Station)bindingContext; // not Convert.ChangeType()
+
+// ✅ Use source generators (CommunityToolkit.Mvvm)
+[ObservableProperty] // generates code at compile time
+private string? searchText;
+
+// ✅ Explicit generic type parameters
+services.GetRequiredService<IStationService>(); // not GetService(typeof(IStationService))
+```
+
+### AOT Restrictions to Avoid
+```csharp
+// ❌ Avoid dynamic code generation
+// ❌ Don't use Expression.Compile()
+// ❌ Avoid Activator.CreateInstance() for generic types
+// ❌ Don't use Assembly.GetTypes() or Type.GetTypes()
+// ❌ Avoid late-bound method calls via reflection
+// ❌ Don't use JsonSerializer without source generators
+```
+
+### AOT-Compatible Patterns
+- Use compile-time code generation (source generators)
+- Prefer static methods and delegates
+- Use explicit type registrations in DI container
+- Implement interfaces explicitly rather than using dynamic dispatch
+- Use DataContract serialization or System.Text.Json source generators
 
 Remember: Clean, maintainable, and testable code is always preferred over clever or complex solutions.
