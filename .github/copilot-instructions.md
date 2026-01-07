@@ -199,6 +199,81 @@ if (string.IsNullOrWhiteSpace(value)) return;
 - Depend on abstractions (interfaces) not concrete implementations
 - Use constructor injection for all dependencies
 
+## Testing Guidelines
+
+### Unit Testing Standards
+- Test all ViewModels and Services
+- Use xUnit, NSubstitute for mocking, and FluentAssertions
+- Follow AAA pattern (Arrange, Act, Assert)
+- Test both happy path and error scenarios
+- Mock all external dependencies (services, navigation, dispatcher)
+
+### Test Structure
+```csharp
+// ✅ Test class naming convention
+public class SelectStationViewModelTests
+{
+    private readonly SelectStationViewModel _viewModel;
+    private readonly IStationService _stationService = Substitute.For<IStationService>();
+    private readonly INavigationService _navigationService = Substitute.For<INavigationService>();
+    private readonly IDispatcher _dispatcher = Substitute.For<IDispatcher>();
+
+    // ✅ Test method naming: MethodName_Scenario_ExpectedResult
+    [Fact]
+    public async Task LoadStationsAsync_WhenCalled_ShouldLoadStationsAndSetSelectedStation()
+    {
+        // Arrange
+        var stations = new List<Station> { new("Test Station", 1) };
+        _stationService.GetAllStationsAsync().Returns(stations);
+
+        // Act
+        await _viewModel.LoadStationsAsync();
+
+        // Assert
+        _viewModel.FilteredStations.Should().HaveCount(1);
+        _viewModel.FilteredStations.First().Name.Should().Be("Test Station");
+    }
+}
+```
+
+### Testing Best Practices
+- Test ViewModels in isolation using mocked dependencies
+- Verify ObservableProperty changes and command execution
+- Test async methods with proper async/await patterns
+- Use TestDispatcher for UI thread operations in tests
+- Test command CanExecute logic separately
+- Avoid reflection in tests for AOT compatibility
+- Use explicit assertions instead of dynamic property access
+
+### Test Project Structure
+```
+TreniniApp/
+├── TreniniApp.Tests/         # Unit test project
+│   ├── ViewModels/           # ViewModel unit tests
+│   ├── Services/             # Service unit tests
+│   └── TreniniApp.Tests.csproj
+├── Pages/                    # Main project files
+├── ViewModels/
+├── Services/
+└── TreniniApp.csproj
+```
+
+**Example test setup:**
+```csharp
+public class SelectStationViewModelTests
+{
+    private readonly SelectStationViewModel _viewModel;
+    private readonly IStationService _stationService = Substitute.For<IStationService>();
+    private readonly INavigationService _navigationService = Substitute.For<INavigationService>();
+    private readonly IDispatcher _dispatcher = Substitute.For<IDispatcher>();
+
+    public SelectStationViewModelTests()
+    {
+        _viewModel = new SelectStationViewModel(_dispatcher, _stationService, _navigationService);
+    }
+}
+```
+
 ## Template for New Features
 
 When implementing new features, follow this structure:
@@ -206,10 +281,11 @@ When implementing new features, follow this structure:
 1. **Domain Model** (`Models/NewEntity.cs`)
 2. **Service Interface** (`Services/INewService.cs`)
 3. **Service Implementation** (`Services/NewService.cs`)
-4. **Register in DI** (`MauiProgram.cs`)
-5. **ViewModel** (`ViewModels/NewViewModel.cs` inheriting `BaseViewModel`)
-6. **Page** (`Pages/NewPage.cs` inheriting `BaseContentPage<NewViewModel>`)
-7. **Navigation** (integrate with `INavigationService`)
+4. **Unit Tests** (`Tests/Services/NewServiceTests.cs`, `Tests/ViewModels/NewViewModelTests.cs`)
+5. **Register in DI** (`MauiProgram.cs`)
+6. **ViewModel** (`ViewModels/NewViewModel.cs` inheriting `BaseViewModel`)
+7. **Page** (`Pages/NewPage.cs` inheriting `BaseContentPage<NewViewModel>`)
+8. **Navigation** (integrate with `INavigationService`)
 
 ## Code Quality Checklist
 
@@ -225,6 +301,8 @@ Before submitting code, ensure:
 - [ ] Platform-specific configurations using `.On<Platform>()`
 - [ ] AOT-compatible code (avoid reflection, use static delegates)
 - [ ] Explicit type conversions instead of dynamic casting
+- [ ] Unit tests for ViewModels and Services
+- [ ] Mocked dependencies in tests
 
 ## Performance Guidelines
 

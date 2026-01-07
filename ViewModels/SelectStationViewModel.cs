@@ -11,41 +11,106 @@ using TreniniApp.Utils;
 
 namespace TreniniApp.ViewModels
 {
-    public partial class SelectStationViewModel : BaseViewModel
+    public partial class SelectStationViewModel(
+        IDispatcher dispatcher,
+        IStationService stationService,
+        INavigationService navigationService
+    ) : BaseViewModel
     {
-        private readonly IStationService _stationService;
-        private readonly INavigationService _navigationService;
-        private readonly IDispatcher _dispatcher;
-
-        public SelectStationViewModel(
-            IDispatcher dispatcher,
-            IStationService stationService,
-            INavigationService navigationService
-        )
-        {
-            _stationService = stationService;
-            _navigationService = navigationService;
-            _dispatcher = dispatcher;
-        }
+        private readonly IStationService _stationService = stationService;
+        private readonly INavigationService _navigationService = navigationService;
+        private readonly IDispatcher _dispatcher = dispatcher;
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(SelectStationCommand))]
         private Station? selectedStation;
 
-        public ObservableCollection<Station> Stations { get; } = [];
+        public ObservableCollection<Station> FilteredStations { get; } = [];
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsSearching))]
+        private string? searchText;
+
+        // ✅ Proprietà calcolata che si aggiorna automaticamente
+        public bool IsSearching => !string.IsNullOrWhiteSpace(SearchText);
+
+        private List<Station> _allStations = [];
+        private int _pageSize = 50;
+        private int _currentPage = 0;
+        private bool _isLoading = false;
+        private bool _allLoaded = false;
+        private CancellationTokenSource? _searchCts;
+
+        // ✅ Chiamato automaticamente quando SearchText cambia
+        partial void OnSearchTextChanged(string? value)
+        {
+            // Cancella la ricerca precedente
+            _searchCts?.Cancel();
+            _searchCts = new CancellationTokenSource();
+
+            // Debouncing: aspetta 300ms prima di cercare
+            Task.Run(
+                async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(300, _searchCts.Token);
+                        await LoadStationsAsync();
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        // Ricerca cancellata, ignora
+                    }
+                },
+                _searchCts.Token
+            );
+        }
 
         [RelayCommand]
         public async Task LoadStationsAsync()
         {
+            if (_isLoading)
+            {
+                return;
+            }
+
+            _isLoading = true;
+
             try
             {
-                Stations.Clear();
-                var stations = await _stationService.GetAllStationsAsync();
-                foreach (var station in stations.Take(100)) // Limit to 100 stations for performance
+                FilteredStations.Clear();
+                _currentPage = 0;
+                _allLoaded = false;
+
+                if (_allStations.Count == 0)
                 {
-                    Stations.Add(station);
+                    var stations = await _stationService.GetAllStationsAsync();
+                    _allStations = [.. stations];
                 }
 
-                SelectedStation = Stations.FirstOrDefault(static x =>
+                var filtered = string.IsNullOrWhiteSpace(SearchText)
+                    ? _allStations
+                    :
+                    [
+                        .. _allStations.Where(s =>
+                            s.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+                        )
+                    ];
+
+                var nextItems = filtered.Skip(_currentPage * _pageSize).Take(_pageSize).ToList();
+
+                foreach (var station in nextItems)
+                {
+                    if (FilteredStations.Contains(station))
+                        continue;
+
+                    FilteredStations.Add(station);
+                }
+
+                _currentPage++;
+                _allLoaded = nextItems.Count < _pageSize;
+
+                SelectedStation = FilteredStations.FirstOrDefault(static x =>
                     x.Value
                     == Preferences.Get(
                         StationConstant.SelectedStationKey,
@@ -55,18 +120,77 @@ namespace TreniniApp.ViewModels
             }
             catch (Exception ex)
             {
-                // Handle exceptions, e.g., show an error message
-                await _dispatcher.DispatchAsync(() =>
+                await _dispatcher.DispatchAsync(async () =>
                 {
-                    // Show error message to the user
-                    // This could be a dialog, toast, or any other UI element
-                    // For example:
-                    App.Current?.Windows?[0]?.Page?.DisplayAlert(
-                        "Error",
-                        $"Failed to load stations: {ex.Message}",
-                        "OK"
-                    );
+                    var page = App.Current?.Windows?[0]?.Page;
+                    if (page != null)
+                    {
+                        await page.DisplayAlertAsync(
+                            "Error",
+                            $"Failed to load stations: {ex.Message}",
+                            "OK"
+                        );
+                    }
                 });
+            }
+            finally
+            {
+                _isLoading = false;
+            }
+        }
+
+        [RelayCommand]
+        public async Task LoadMoreStationsAsync()
+        {
+            if (_isLoading || _allLoaded)
+            {
+                return;
+            }
+
+            _isLoading = true;
+
+            try
+            {
+                var filtered = string.IsNullOrWhiteSpace(SearchText)
+                    ? _allStations
+                    :
+                    [
+                        .. _allStations.Where(s =>
+                            s.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+                        )
+                    ];
+
+                var nextItems = filtered.Skip(_currentPage * _pageSize).Take(_pageSize).ToList();
+
+                foreach (var station in nextItems)
+                {
+                    if (FilteredStations.Contains(station))
+                        continue;
+
+                    FilteredStations.Add(station);
+                }
+
+                _currentPage++;
+                _allLoaded = nextItems.Count < _pageSize;
+            }
+            catch (Exception ex)
+            {
+                await _dispatcher.DispatchAsync(async () =>
+                {
+                    var page = App.Current?.Windows?[0]?.Page;
+                    if (page != null)
+                    {
+                        await page.DisplayAlertAsync(
+                            "Error",
+                            $"Failed to load more stations: {ex.Message}",
+                            "OK"
+                        );
+                    }
+                });
+            }
+            finally
+            {
+                _isLoading = false;
             }
         }
 
@@ -80,20 +204,17 @@ namespace TreniniApp.ViewModels
 
             SelectedStation = station;
 
-            // Handle station selection logic here
             Preferences.Set(
                 StationConstant.SelectedStationKey,
                 SelectedStation?.Value ?? StationConstant.DefaultStationId
             );
 
-            // Assuming you have a method to navigate back or close the modal
             _navigationService.PopAsync();
         }
 
         [RelayCommand]
         public void Cancel()
         {
-            // Handle cancel logic here
             _navigationService.PopAsync();
         }
 

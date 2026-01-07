@@ -21,7 +21,7 @@ public class TrainDataTemplate : DataTemplate
             {
                 RowSpacing = 3,
                 ColumnSpacing = 5,
-                Padding = new Thickness(16, 12), // margine superiore aumentato
+                Padding = new Thickness(16, 11), // padding iOS standard
 
                 RowDefinitions = Rows.Define(
                     (Row.Up, GridLength.Auto),
@@ -98,41 +98,44 @@ public class TrainDataTemplate : DataTemplate
                             static (TrainRow m) => m.Track,
                             mode: BindingMode.OneTime
                         ),
-                    // Apple style: subtle separator at the bottom, solo se non è l'ultimo elemento
-                    new BoxView
-                    {
-                        HeightRequest = 1,
-                        BackgroundColor = Color.FromArgb("#E5E5EA"),
-                        HorizontalOptions = LayoutOptions.Fill,
-                        VerticalOptions = LayoutOptions.End,
-                    }
-                        .Row(Row.Border)
-                        .ColumnSpan(3)
-                        .Bind(
-                            BoxView.IsVisibleProperty,
-                            static (TrainRow m) => m.Position,
-                            mode: BindingMode.OneTime,
-                            convert: static (object? pos) => pos is Position p && p != Position.Last
-                        )
+                    // Apple style: subtitle separator at the bottom, solo se non è l'ultimo elemento
+                    // new BoxView
+                    // {
+                    //     HeightRequest = 0.5,
+                    //     BackgroundColor = Color.FromArgb("#C6C6C8"),
+                    //     Margin = new Thickness(16, 0, 0, 0), // inset a sinistra iOS
+                    //     HorizontalOptions = LayoutOptions.Fill,
+                    //     VerticalOptions = LayoutOptions.End,
+                    // }
+                    //     .Row(Row.Border)
+                    //     .ColumnSpan(3)
+                    //     .Bind(
+                    //         BoxView.IsVisibleProperty,
+                    //         static (TrainRow m) => m.Position,
+                    //         mode: BindingMode.OneTime,
+                    //         convert: static (object? pos) => pos is Position p && p != Position.Last
+                    //     )
                 }
             }
-        }.Bind(
-            Border.StrokeShapeProperty,
-            static (TrainRow m) => m.Position,
-            mode: BindingMode.OneTime,
-            convert: static (object? pos) =>
-            {
-                if (pos is not Position p)
-                    return new RoundRectangle { CornerRadius = new CornerRadius(0) };
-                return p == Position.First && p == Position.Last
-                    ? new RoundRectangle { CornerRadius = new CornerRadius(16) }
-                    : p == Position.First
-                        ? new RoundRectangle { CornerRadius = new CornerRadius(16, 16, 0, 0) }
-                        : p == Position.Last
-                            ? new RoundRectangle { CornerRadius = new CornerRadius(0, 0, 16, 16) }
-                            : new RoundRectangle { CornerRadius = new CornerRadius(0) };
-            }
-        );
+        };
+
+    // }.Bind(
+    //     Border.StrokeShapeProperty,
+    //     static (TrainRow m) => m.Position,
+    //     mode: BindingMode.OneTime,
+    //     convert: static (object? pos) =>
+    //     {
+    //         if (pos is not Position p)
+    //             return new RoundRectangle { CornerRadius = new CornerRadius(0) };
+    //         return p == Position.First && p == Position.Last
+    //             ? new RoundRectangle { CornerRadius = new CornerRadius(10) } // iOS usa 10pt
+    //             : p == Position.First
+    //                 ? new RoundRectangle { CornerRadius = new CornerRadius(10, 10, 0, 0) }
+    //                 : p == Position.Last
+    //                     ? new RoundRectangle { CornerRadius = new CornerRadius(0, 0, 10, 10) }
+    //                     : new RoundRectangle { CornerRadius = new CornerRadius(0) };
+    //     }
+    // );
 
     enum Row
     {

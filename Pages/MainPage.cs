@@ -17,7 +17,7 @@ public partial class MainPage : BaseContentPage<MainViewModel>
         _dispatcher = dispatcher;
 
         BindingContext.PullToRefreshFailed += HandlePullToRefreshFailed;
-        BackgroundColor = Colors.WhiteSmoke;
+        BackgroundColor = Colors.White;
         Padding = new Thickness(10, 5);
 
         ToolbarItems.Add(
@@ -108,6 +108,8 @@ public partial class MainPage : BaseContentPage<MainViewModel>
         }
     }
 
-    void HandlePullToRefreshFailed(object? sender, string message) =>
-        _dispatcher.DispatchAsync(() => DisplayAlert("Refresh Failed", message, "OK"));
+    async void HandlePullToRefreshFailed(object? sender, string message) =>
+        await _dispatcher.DispatchAsync(
+            async () => await DisplayAlertAsync("Refresh Failed", message, "OK")
+        );
 }
