@@ -349,3 +349,10 @@ services.GetRequiredService<IStationService>(); // not GetService(typeof(IStatio
 - Use DataContract serialization or System.Text.Json source generators
 
 Remember: Clean, maintainable, and testable code is always preferred over clever or complex solutions.
+
+### Commenting Standards
+- Use XML documentation comments for public members
+- Comment complex logic or decisions in the code
+- Keep comments up-to-date with code changes
+- Avoid redundant comments that state the obvious
+- Use english for all comments and documentation

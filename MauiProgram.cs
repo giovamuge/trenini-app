@@ -37,6 +37,7 @@ public static class MauiProgram
         // Services
         builder.Services.AddHttpClient();
         builder.Services.AddSingleton(Browser.Default);
+        builder.Services.AddSingleton<IHapticFeedbackService, HapticFeedbackService>();
         builder.Services.AddTransient<IWebScrapingService, WebScrapingService>();
         builder.Services.AddTransient<IStationService, StationService>();
 

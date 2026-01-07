@@ -23,13 +23,10 @@ public partial class MainViewModel : BaseViewModel
     [ObservableProperty]
     private string? _searchText;
 
-    private readonly string _selectedStation = Preferences.Get(
-        StationConstant.SelectedStationKey,
-        StationConstant.DefaultStationId
-    );
-
     [ObservableProperty]
     private string? _stationName;
+
+    private string _selectedStation = StationConstant.DefaultStationId;
 
     public MainViewModel(
         IDispatcher dispatcher,
@@ -70,26 +67,7 @@ public partial class MainViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    async Task SelectStation()
-    {
-        // var selectStationPage = Application
-        //     .Current?.Windows[0]?
-        //     .Page?.Handler?.MauiContext?.Services.GetService<SelectStationPage>();
-
-        // if (selectStationPage is null)
-        //     return;
-
-        // var station = await .Current(selectStationPage);
-
-        // if (station is null)
-        //     return;
-
-        // Preferences.Set(SelectedStationKey, station.Code);
-        // _selectedStation = station.Code;
-
-        // var selectStationPage = await DipendencyInjectionUtil.ResolveAsync<SelectStationPage>();
-        await _navigationService.PushModalAsync<SelectStationPage>();
-    }
+    Task SelectStation() => _navigationService.PushModalAsync<SelectStationPage>();
 
     [RelayCommand]
     async Task Refresh()
@@ -141,7 +119,7 @@ public partial class MainViewModel : BaseViewModel
         }
         else
         {
-            int index = 0;
+            var index = 0;
             foreach (var model in collection)
             {
                 if (comparison(model, modelToInsert) >= 0)
@@ -159,6 +137,11 @@ public partial class MainViewModel : BaseViewModel
 
     public override async Task OnAppearingAsync()
     {
+        _selectedStation = Preferences.Get(
+            StationConstant.SelectedStationKey,
+            StationConstant.DefaultStationId
+        );
+
         var stationName =
             await _stationService.GetStationNameByIdAsync($"{_selectedStation}") ?? "Uknown";
 

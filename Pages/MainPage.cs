@@ -23,29 +23,21 @@ public partial class MainPage : BaseContentPage<MainViewModel>
         ToolbarItems.Add(
             new ToolbarItem { Order = ToolbarItemOrder.Primary, Priority = 0 }
                 .Bind(
-                    ToolbarItem.CommandProperty,
+                    MenuItem.CommandProperty,
                     static (MainViewModel vm) => vm.SelectStationCommand
                 )
-                .Bind(ToolbarItem.TextProperty, static (MainViewModel vm) => vm.StationName)
+                .Bind(MenuItem.TextProperty, static (MainViewModel vm) => vm.StationName)
         );
 
         Content = new RefreshView
         {
             Content = new CollectionView
             {
-                Shadow = new Shadow
-                {
-                    Brush = Brush.Black,
-                    Opacity = 0.08f,
-                    Offset = new Point(0, 2),
-                    Radius = 8
-                },
-                BackgroundColor = Colors.Transparent,
                 Margin = new Thickness(0),
                 ItemTemplate = new TrainDataTemplate(),
                 // Apple style: no separators, no uneven rows, no background
                 SelectionMode = SelectionMode.None
-            }.Bind(CollectionView.ItemsSourceProperty, static (MainViewModel m) => m.TrainRows)
+            }.Bind(ItemsView.ItemsSourceProperty, static (MainViewModel m) => m.TrainRows)
         }
             .Bind(
                 RefreshView.IsRefreshingProperty,

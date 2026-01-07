@@ -1,13 +1,9 @@
-using System.Collections;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using TreniniApp.Constants;
 using TreniniApp.Models;
 using TreniniApp.Services;
-using TreniniApp.Utils;
 
 namespace TreniniApp.ViewModels
 {
@@ -22,17 +18,34 @@ namespace TreniniApp.ViewModels
         private readonly IDispatcher _dispatcher = dispatcher;
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(SelectStationCommand))]
         private Station? selectedStation;
+
+        [ObservableProperty]
+        private string? searchText;
 
         public ObservableCollection<Station> FilteredStations { get; } = [];
 
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(IsSearching))]
-        private string? searchText;
+        public void OnStationSelected(Station station)
+        {
+            if (station == null)
+            {
+                return;
+            }
 
-        // ✅ Proprietà calcolata che si aggiorna automaticamente
-        public bool IsSearching => !string.IsNullOrWhiteSpace(SearchText);
+            SelectedStation = station;
+
+            // Save the selected station as default
+            Preferences.Set(StationConstant.SelectedStationKey, station.Value);
+
+            // Close the modal
+            _ = _navigationService.PopModalAsync();
+        }
+
+        public Task OnSearchChangedAsync(string? newTextValue)
+        {
+            SearchText = newTextValue;
+            return Task.CompletedTask;
+        }
 
         private List<Station> _allStations = [];
         private int _pageSize = 50;
@@ -41,33 +54,33 @@ namespace TreniniApp.ViewModels
         private bool _allLoaded = false;
         private CancellationTokenSource? _searchCts;
 
-        // ✅ Chiamato automaticamente quando SearchText cambia
         partial void OnSearchTextChanged(string? value)
         {
-            // Cancella la ricerca precedente
+            // Cancel previous search if any
             _searchCts?.Cancel();
             _searchCts = new CancellationTokenSource();
+            var token = _searchCts.Token;
 
-            // Debouncing: aspetta 300ms prima di cercare
-            Task.Run(
-                async () =>
-                {
-                    try
-                    {
-                        await Task.Delay(300, _searchCts.Token);
-                        await LoadStationsAsync();
-                    }
-                    catch (TaskCanceledException)
-                    {
-                        // Ricerca cancellata, ignora
-                    }
-                },
-                _searchCts.Token
-            );
+            // Debouncing: wait 300ms before searching
+            _ = PerformDebouncedSearchAsync(token);
         }
 
-        [RelayCommand]
-        public async Task LoadStationsAsync()
+        private async Task PerformDebouncedSearchAsync(CancellationToken token)
+        {
+            try
+            {
+                await Task.Delay(300, token);
+
+                // Run on the main thread to update UI-bound collections
+                await _dispatcher.DispatchAsync(FilterStationsAsync);
+            }
+            catch (TaskCanceledException)
+            {
+                // Search canceled, ignore
+            }
+        }
+
+        private async Task FilterStationsAsync()
         {
             if (_isLoading)
             {
@@ -88,12 +101,13 @@ namespace TreniniApp.ViewModels
                     _allStations = [.. stations];
                 }
 
-                var filtered = string.IsNullOrWhiteSpace(SearchText)
+                var searchText = SearchText;
+                var filtered = string.IsNullOrWhiteSpace(searchText)
                     ? _allStations
                     :
                     [
                         .. _allStations.Where(s =>
-                            s.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+                            s.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)
                         )
                     ];
 
@@ -101,15 +115,13 @@ namespace TreniniApp.ViewModels
 
                 foreach (var station in nextItems)
                 {
-                    if (FilteredStations.Contains(station))
-                        continue;
-
                     FilteredStations.Add(station);
                 }
 
                 _currentPage++;
                 _allLoaded = nextItems.Count < _pageSize;
 
+                // Seleziona la stazione salvata
                 SelectedStation = FilteredStations.FirstOrDefault(static x =>
                     x.Value
                     == Preferences.Get(
@@ -118,11 +130,24 @@ namespace TreniniApp.ViewModels
                     )
                 );
             }
+            finally
+            {
+                _isLoading = false;
+            }
+        }
+
+        [RelayCommand]
+        public async Task LoadStationsAsync()
+        {
+            try
+            {
+                await FilterStationsAsync();
+            }
             catch (Exception ex)
             {
                 await _dispatcher.DispatchAsync(async () =>
                 {
-                    var page = App.Current?.Windows?[0]?.Page;
+                    var page = Application.Current?.Windows?[0]?.Page;
                     if (page != null)
                     {
                         await page.DisplayAlertAsync(
@@ -132,10 +157,6 @@ namespace TreniniApp.ViewModels
                         );
                     }
                 });
-            }
-            finally
-            {
-                _isLoading = false;
             }
         }
 
@@ -165,7 +186,9 @@ namespace TreniniApp.ViewModels
                 foreach (var station in nextItems)
                 {
                     if (FilteredStations.Contains(station))
+                    {
                         continue;
+                    }
 
                     FilteredStations.Add(station);
                 }
@@ -177,15 +200,17 @@ namespace TreniniApp.ViewModels
             {
                 await _dispatcher.DispatchAsync(async () =>
                 {
-                    var page = App.Current?.Windows?[0]?.Page;
-                    if (page != null)
+                    var page = Application.Current?.Windows?[0]?.Page;
+                    if (page == null)
                     {
-                        await page.DisplayAlertAsync(
-                            "Error",
-                            $"Failed to load more stations: {ex.Message}",
-                            "OK"
-                        );
+                        return;
                     }
+
+                    await page.DisplayAlertAsync(
+                        "Error",
+                        $"Failed to load more stations: {ex.Message}",
+                        "OK"
+                    );
                 });
             }
             finally
@@ -194,33 +219,9 @@ namespace TreniniApp.ViewModels
             }
         }
 
-        private bool CanSelectStation() => SelectedStation != null;
-
-        [RelayCommand(CanExecute = nameof(CanSelectStation))]
-        public void SelectStation(Station station)
-        {
-            if (station == null)
-                return;
-
-            SelectedStation = station;
-
-            Preferences.Set(
-                StationConstant.SelectedStationKey,
-                SelectedStation?.Value ?? StationConstant.DefaultStationId
-            );
-
-            _navigationService.PopAsync();
-        }
-
         [RelayCommand]
-        public void Cancel()
-        {
-            _navigationService.PopAsync();
-        }
+        public Task Cancel() => _navigationService.PopModalAsync();
 
-        public override async Task OnAppearingAsync()
-        {
-            await LoadStationsAsync();
-        }
+        public override Task OnAppearingAsync() => LoadStationsAsync();
     }
 }
