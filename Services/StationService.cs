@@ -10,57 +10,57 @@ namespace TreniniApp.Services;
 
 public class StationService() : IStationService
 {
-    private readonly string _stationsFilePath = "stations.json";
+	private readonly string _stationsFilePath = "stations.json";
 
-    public async Task<string?> GetStationNameByIdAsync(string code)
-    {
-        var stations = await ReadStationsFromFileAsync();
-        var station = stations.FirstOrDefault(s => s.Value == code);
-        return station?.Name;
-    }
+	public async Task<string?> GetStationNameByIdAsync(string code)
+	{
+		var stations = await ReadStationsFromFileAsync();
+		var station = stations.FirstOrDefault(s => s.Value == code);
+		return station?.Name;
+	}
 
-    public async Task<IReadOnlyList<Station>> GetAllStationsAsync()
-    {
-        var stations = await ReadStationsFromFileAsync();
-        return stations;
-    }
+	public async Task<IReadOnlyList<Station>> GetAllStationsAsync()
+	{
+		var stations = await ReadStationsFromFileAsync();
+		return stations;
+	}
 
-    public async Task<IReadOnlyList<Station>> SearchStationsAsync(string query)
-    {
-        var stations = await ReadStationsFromFileAsync();
-        if (string.IsNullOrWhiteSpace(query))
-            return stations;
+	public async Task<IReadOnlyList<Station>> SearchStationsAsync(string query)
+	{
+		var stations = await ReadStationsFromFileAsync();
+		if (string.IsNullOrWhiteSpace(query))
+			return stations;
 
-        query = query.ToLowerInvariant();
-        return
-        [
-            .. stations.Where(s =>
-                (
-                    !string.IsNullOrEmpty(s.Name)
-                    && s.Name.Contains(query, StringComparison.InvariantCultureIgnoreCase)
-                )
-                || (
-                    !string.IsNullOrEmpty(s.Value)
-                    && s.Value.Contains(query, StringComparison.InvariantCultureIgnoreCase)
-                )
-            )
-        ];
-    }
+		query = query.ToLowerInvariant();
+		return
+		[
+			.. stations.Where(s =>
+				(
+					!string.IsNullOrEmpty(s.Name)
+					&& s.Name.Contains(query, StringComparison.InvariantCultureIgnoreCase)
+				)
+				|| (
+					!string.IsNullOrEmpty(s.Value)
+					&& s.Value.Contains(query, StringComparison.InvariantCultureIgnoreCase)
+				)
+			),
+		];
+	}
 
-    private async Task<List<Station>> ReadStationsFromFileAsync()
-    {
-        if (!File.Exists(_stationsFilePath))
-            return [];
+	private async Task<List<Station>> ReadStationsFromFileAsync()
+	{
+		if (!File.Exists(_stationsFilePath))
+			return [];
 
-        using var stream = File.OpenRead(_stationsFilePath);
+		using var stream = File.OpenRead(_stationsFilePath);
 
-        // Use source-generated context for AOT compatibility
-        var stations = await JsonSerializer.DeserializeAsync(
-            stream,
-            StationJsonContext.Default.ListStation
-        );
-        return stations ?? [];
-    }
+		// Use source-generated context for AOT compatibility
+		var stations = await JsonSerializer.DeserializeAsync(
+			stream,
+			StationJsonContext.Default.ListStation
+		);
+		return stations ?? [];
+	}
 }
 
 // Add source generation context for AOT

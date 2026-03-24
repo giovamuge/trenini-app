@@ -5,13 +5,13 @@ namespace TreniniApp.Services;
 /// </summary>
 public interface IHapticFeedbackService
 {
-    /// <summary>
-    /// Performs a click haptic feedback.
-    /// </summary>
-    void PerformClick();
+	/// <summary>
+	/// Performs a click haptic feedback.
+	/// </summary>
+	void PerformClick();
 
-    /// <summary>
-    /// Performs a long press haptic feedback.
-    /// </summary>
-    void PerformLongPress();
+	/// <summary>
+	/// Performs a long press haptic feedback.
+	/// </summary>
+	void PerformLongPress();
 }

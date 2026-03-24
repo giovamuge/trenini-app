@@ -7,13 +7,13 @@ namespace TreniniApp.Extensions;
 /// </summary>
 public static class HapticFeedbackExtension
 {
-    /// <summary>
-    /// Adds haptic feedback behavior to any View.
-    /// </summary>
-    public static T WithHapticFeedback<T>(this T view)
-        where T : View
-    {
-        view.Behaviors.Add(new HapticFeedbackBehavior());
-        return view;
-    }
+	/// <summary>
+	/// Adds haptic feedback behavior to any View.
+	/// </summary>
+	public static T WithHapticFeedback<T>(this T view)
+		where T : View
+	{
+		view.Behaviors.Add(new HapticFeedbackBehavior());
+		return view;
+	}
 }

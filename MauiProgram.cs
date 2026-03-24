@@ -9,46 +9,46 @@ namespace TreniniApp;
 
 public static class MauiProgram
 {
-    public static MauiApp CreateMauiApp()
-    {
-        var builder = MauiApp
-            .CreateBuilder()
-            .UseMauiApp<App>()
-            .UseMauiCommunityToolkit(options =>
-            {
-                options.SetShouldSuppressExceptionsInConverters(false);
-                options.SetShouldSuppressExceptionsInBehaviors(false);
-                options.SetShouldSuppressExceptionsInAnimations(false);
-            })
-            .UseMauiCommunityToolkitMarkup()
-            .ConfigureFonts(fonts =>
-            {
-                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-            });
+	public static MauiApp CreateMauiApp()
+	{
+		var builder = MauiApp
+			.CreateBuilder()
+			.UseMauiApp<App>()
+			.UseMauiCommunityToolkit(options =>
+			{
+				options.SetShouldSuppressExceptionsInConverters(false);
+				options.SetShouldSuppressExceptionsInBehaviors(false);
+				options.SetShouldSuppressExceptionsInAnimations(false);
+			})
+			.UseMauiCommunityToolkitMarkup()
+			.ConfigureFonts(fonts =>
+			{
+				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+			});
 
-        // App
-        builder.Services.AddSingleton<App>();
+		// App
+		builder.Services.AddSingleton<App>();
 
-        // Navigation
-        builder.Services.AddSingleton<NavigationPage>();
-        builder.Services.AddSingleton<INavigationService, NavigationService>();
+		// Navigation
+		builder.Services.AddSingleton<NavigationPage>();
+		builder.Services.AddSingleton<INavigationService, NavigationService>();
 
-        // Services
-        builder.Services.AddHttpClient();
-        builder.Services.AddSingleton(Browser.Default);
-        builder.Services.AddSingleton<IHapticFeedbackService, HapticFeedbackService>();
-        builder.Services.AddTransient<IWebScrapingService, WebScrapingService>();
-        builder.Services.AddTransient<IStationService, StationService>();
+		// Services
+		builder.Services.AddHttpClient();
+		builder.Services.AddSingleton(Browser.Default);
+		builder.Services.AddSingleton<IHapticFeedbackService, HapticFeedbackService>();
+		builder.Services.AddTransient<IWebScrapingService, WebScrapingService>();
+		builder.Services.AddTransient<IStationService, StationService>();
 
-        // Pages + View Models
-        builder.Services.AddTransient<MainPage, MainViewModel>();
-        builder.Services.AddTransient<SelectStationPage, SelectStationViewModel>();
+		// Pages + View Models
+		builder.Services.AddTransient<MainPage, MainViewModel>();
+		builder.Services.AddTransient<SelectStationPage, SelectStationViewModel>();
 
 #if DEBUG
-        builder.Logging.AddDebug();
+		builder.Logging.AddDebug();
 #endif
 
-        return builder.Build();
-    }
+		return builder.Build();
+	}
 }

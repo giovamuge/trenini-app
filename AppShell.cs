@@ -5,12 +5,12 @@ namespace TreniniApp;
 /* Not in use actually */
 public class AppShell : Shell
 {
-    public AppShell(MainPage mainPage)
-    {
-        Items.Add(mainPage);
+	public AppShell(MainPage mainPage)
+	{
+		Items.Add(mainPage);
 
 #if IOS || MACCATALYST
-        // ShellAttachedProperties.SetPrefersLargeTitles(this, true);
+		// ShellAttachedProperties.SetPrefersLargeTitles(this, true);
 #endif
-    }
+	}
 }
